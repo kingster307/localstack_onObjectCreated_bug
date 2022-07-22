@@ -30,6 +30,24 @@ run-test:
 	cd tests; \
 	pytest;
 
+# =======
+# localstack aws profile
+# ============================
+# profile localstack config looks like this
+#[profile localstack]
+#region = us-west-2
+#output = json
+# ============================
+# profile localstack credentials looks like this
+#[localstack]
+#aws_access_key_id = test
+#aws_secret_access_key = test
+# ============================
+# TODO must have jq installed for usage
+get-logs-s3-on-object-created:
+	export AWS_REGION=$(AWS_REGION); MSYS_NO_PATHCONV=1 aws --profile localstack --endpoint-url=$(ENDPOINT) logs tail $(shell jq -rcM '.s3_on_object_created_lambda.name|"/aws/lambda/"+.' pulumi_output.json) --follow
+
+
 # ========================================================================================================================
 # Raw recipes
 # ==============================

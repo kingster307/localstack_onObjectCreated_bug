@@ -80,7 +80,6 @@ const s3OnObjectCreatedLambdaWriteReportS3RoleAttachment = new aws.iam.RolePolic
     {provider: PulumiUtil.awsProvider}
 );
 
-// s3OnObjectCreatedLambda
 export const s3_on_object_created_lambda = new aws.lambda.Function(
     's3OnObjectCreatedLambda',
     {

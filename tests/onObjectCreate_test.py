@@ -32,7 +32,7 @@ def format_res(resp) -> dict:
     return resp_dict
 
 
-def test_error():
+def test_error_no_files():
     # get the apigw url for s3_create_presigned_url_lambda
     presigned_post_url = presigned_url_lambda_apigw_url()
     # query string passes in metadata into lambda for presigned post
@@ -50,6 +50,42 @@ def test_error():
     # add file as last in post fields
     post_fields["file"] = open(f"../{query_string['file_name']}", "rb")
 
+    headers = {
+        "Content-Type": "multipart/form-data; boundary=----"
+    }
+
     # make post request to presigned url | should trigger lambda & display logs
-    res2 = format_res(requests.post(change_host_of_url_to_localhost(post_url), data=post_fields))
-    # run make get-logs-aws from root
+    res2 = format_res(requests.post(change_host_of_url_to_localhost(post_url), data=post_fields, headers=headers))
+    print(res2)
+    # TODO doesn't show in localstack logs nor lambda specific logs | no lambda log output
+    # run from root -- make get-logs-s3-on-object-created -- to see lambda specific logs
+    # run from root -- make get-logs-aws -- to see localstack logs
+
+
+def test_error_with_files():
+    # get the apigw url for s3_create_presigned_url_lambda
+    presigned_post_url = presigned_url_lambda_apigw_url()
+    # query string passes in metadata into lambda for presigned post
+    query_string = {
+        "action": "upload",
+        "file_name": "demo_file.csv",
+        "content_type": "csv",
+    }
+    # get presigned url
+    res = format_res(requests.get(presigned_post_url, params=query_string))
+
+    # parse out url & fields
+    post_url = res["content"]["data"]["url"]
+    post_fields = res["content"]["data"]["fields"]
+    # add file as last in post fields
+    files = {
+        "file": open(f"../{query_string['file_name']}", "rb")
+    }
+
+    # make post request to presigned url | should trigger lambda & display logs
+    res2 = format_res(requests.post(change_host_of_url_to_localhost(post_url), data=post_fields, files=files))
+    print(res2)
+    # TODO can see lambda fire in localstack logs, nothing shows in lambda specific logs. Lambda log output never shows
+    # see screenshot in logs dir (../logs) where we can see lambda does fire but no logs
+    # run from root -- make get-logs-s3-on-object-created -- to see lambda specific logs
+    # run from root -- make get-logs-aws -- to see localstack logs
