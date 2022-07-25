@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 
@@ -12,8 +13,15 @@ def presigned_url_lambda_apigw_url() -> str:
     return "http://" + api_id + the_sauce + api_stage + "/get_presigned_url"
 
 
-def change_host_of_url_to_localhost(url: str, remove_protocol: bool = True):
-    return "http://localhost:" + url.split("://")[-1].split(":")[-1]
+def change_host_of_url_to_localhost(url: str):
+    # TODO prepend bucket to end doesn't work
+    # url = "http://" + os.environ["LOCALSTACK_HOSTNAME"] + ":4566" + url.split(":4566")[1]
+    # TODO add bucket in url like in PR logs doesn't work
+    print(f"original url: {url}")
+    url = "http://" + url.split(":4566/")[1] + "." + os.environ["LOCALSTACK_HOSTNAME"] + ":4566"
+    # url = "http://" + url.split("://")[-1].split(".")[0] + ".localhost.localstack.cloud:4566"
+    print(f"altered url: {url}")
+    return url
 
 
 def format_res(resp) -> dict:
@@ -48,14 +56,10 @@ def test_error_no_files():
     post_url = res["content"]["data"]["url"]
     post_fields = res["content"]["data"]["fields"]
     # add file as last in post fields
-    post_fields["file"] = open(f"../{query_string['file_name']}", "rb")
-
-    headers = {
-        "Content-Type": "multipart/form-data; boundary=----"
-    }
+    files = {"file" : open(f"../{query_string['file_name']}", "rb")}
 
     # make post request to presigned url | should trigger lambda & display logs
-    res2 = format_res(requests.post(change_host_of_url_to_localhost(post_url), data=post_fields, headers=headers))
+    res2 = format_res(requests.post(change_host_of_url_to_localhost(post_url), data=post_fields, files=files))
     print(res2)
     # TODO doesn't show in localstack logs nor lambda specific logs | no lambda log output
     # run from root -- make get-logs-s3-on-object-created -- to see lambda specific logs
@@ -85,7 +89,3 @@ def test_error_with_files():
     # make post request to presigned url | should trigger lambda & display logs
     res2 = format_res(requests.post(change_host_of_url_to_localhost(post_url), data=post_fields, files=files))
     print(res2)
-    # TODO can see lambda fire in localstack logs, nothing shows in lambda specific logs. Lambda log output never shows
-    # see screenshot in logs dir (../logs) where we can see lambda does fire but no logs
-    # run from root -- make get-logs-s3-on-object-created -- to see lambda specific logs
-    # run from root -- make get-logs-aws -- to see localstack logs
