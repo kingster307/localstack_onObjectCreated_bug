@@ -17,8 +17,10 @@ def change_host_of_url_to_localhost(url: str):
     # TODO prepend bucket to end doesn't work
     # url = "http://" + os.environ["LOCALSTACK_HOSTNAME"] + ":4566" + url.split(":4566")[1]
     # TODO add bucket in url like in PR logs doesn't work
+    print(f"original url: {url}")
     url = "http://" + url.split(":4566/")[1] + "." + os.environ["LOCALSTACK_HOSTNAME"] + ":4566"
-    print(url)
+    # url = "http://" + url.split("://")[-1].split(".")[0] + ".localhost.localstack.cloud:4566"
+    print(f"altered url: {url}")
     return url
 
 
