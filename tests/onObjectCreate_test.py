@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 
@@ -12,8 +13,11 @@ def presigned_url_lambda_apigw_url() -> str:
     return "http://" + api_id + the_sauce + api_stage + "/get_presigned_url"
 
 
-def change_host_of_url_to_localhost(url: str, remove_protocol: bool = True):
-    url = "http://" + url.split("://")[-1].split(".")[0] + ".localhost.localstack.cloud:4566"
+def change_host_of_url_to_localhost(url: str):
+    # TODO prepend bucket to end doesn't work
+    # url = "http://" + os.environ["LOCALSTACK_HOSTNAME"] + ":4566" + url.split(":4566")[1]
+    # TODO add bucket in url like in PR logs doesn't work
+    url = "http://" + url.split(":4566/")[1] + "." + os.environ["LOCALSTACK_HOSTNAME"] + ":4566"
     print(url)
     return url
 
